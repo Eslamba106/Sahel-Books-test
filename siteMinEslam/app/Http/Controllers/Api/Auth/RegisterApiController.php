@@ -2,11 +2,12 @@
  
 namespace App\Http\Controllers\Api\Auth;
 
+use Illuminate\Http\Request;
 use App\Services\Auth\UserServices;
+use Illuminate\Support\Facades\Auth;
 use App\Requests\Users\LoginUserValidator;
 use App\Requests\Users\CreateUserValidator;
 use App\Http\Controllers\Api\Base\BaseController;
-use Illuminate\Support\Facades\Auth;
 
 class RegisterApiController extends BaseController
 {
@@ -28,20 +29,22 @@ class RegisterApiController extends BaseController
         return $this->sendResponse($message);
 
     }
-    public function login(LoginUserValidator $loginUserValidator){
+    // public function login(LoginUserValidator $loginUserValidator){
 
-        if(!empty($loginUserValidator->getErrors())){
-            return response()->json($loginUserValidator->getErrors() , 406);
-        }
+    //     if(!empty($loginUserValidator->getErrors())){
+    //         return response()->json($loginUserValidator->getErrors() , 406);
+    //     }
 
-        $request = $loginUserValidator->request();
-        if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){
-            $user = $request->user();
-            $success['token'] = $user->createToken($user->name)->plainTextToken;
-            $success['name'] = $user->name;
-            return $this->sendResponse($success);
-        }else{
-            return $this->sendResponse('Unauthorised' , 'fail' , 401);
-        }
-    }
+    //     $request = $loginUserValidator->request();
+    //     if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){
+    //         $user = $request->user();
+    //         $success['token'] = $user->createToken($user->name)->plainTextToken;
+    //         $success['name'] = $user->name;
+    //         return $this->sendResponse($success);
+    //     }else{
+    //         return $this->sendResponse('Unauthorised' , 'fail' , 401);
+    //     }
+    // }
+
+
 }

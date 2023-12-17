@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InvoiceModel extends Model
 {
-    use HasFactory;
+    use HasFactory, HasApiTokens ,Notifiable ,SoftDeletes;
     protected $table = 'invoice';
     public $timestamps = false;
     protected $fillable = [
@@ -72,6 +75,8 @@ class InvoiceModel extends Model
         'api_status_name',
         'api_status_code',
         'api_payment_method',
-        'change_return'
+        'change_return',
+        'updated_at',
+        'deleted_at'
     ];
 }
