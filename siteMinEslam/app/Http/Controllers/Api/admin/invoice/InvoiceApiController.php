@@ -118,14 +118,14 @@ class InvoiceApiController extends Controller
     public function update(Request $request){
         //get invoice and invoice items and user id
         $invoice = InvoiceModel::find($request->id);
-        $items = $request->input('items');
+        $request_items = $request->input('items');
         $user = auth('sanctum')->user()->id  ;
-        dd($items);
+
+        // if invoice exists
         if($invoice){
-            $invoice_items =DB::table('invoice_items')->where('invoice_id' ,$invoice->id)->get();
             $data = $request->only([
                 'user_id' => $user,
-                'business_id' => $request->business_id,
+                'business_id' => $request->business_id ,
                 'title' => $request->title,
                 'type' => $request->type,
                 'recurring' => $request->recurring,
@@ -159,62 +159,18 @@ class InvoiceApiController extends Controller
                 'created_at' => date('Y-m-d-h-m-s'),
                 'updated_at' => date('Y-m-d-h-m-s'),
             ]);
-            $this->invoice_service->update($data, $invoice);
+            // function update invoice in invoice table
+            $this->invoice_service->update($data, $invoice);  
+            // get invoice items from invoice_items table
             $invoice_items = DB::table('invoice_items')->where('invoice_id' , $invoice->id)->get();
-            if (!empty($items)) {
-                // if($items->id)
-                for($i=0 ; $i < count($items) ; $i++){
-                    if($items[$i]->id){
-                        dd($items[$i]->id);
-                    }
-                    $product[] = ProductsModel::where('id' , $items[$i]['id'])->first(); 
-                }
-                $item_data = [];
-                for ($i = 0; $i < count($product); $i++) {
-                    if(empty($product[$i]->id)){
-                        continue;
-                    }else{
-                        $item_data[$i] = array(
-                            'invoice_id' => $invoice->id,
-                            'item' => $product[$i]->id,
-                            'price' => $items[$i]['price'] ?? $product[$i]->price,
-                            'qty' =>$items[$i]['qty'] ?? 1 ,
-                            'discount' => $items[$i]['discount'] ?? $product[$i]->discount_item ?? null,
-                            'total' => $product[$i]->total_price
-                        );
-                        helper_insert($item_data[$i], 'invoice_items');
-                    }
-            }}
+            // send request->item and invoice items to update in function update_invoice_items
+            $invoice_items_updated = $this->invoice_service->update_invoice_items($invoice_items , $request_items);
+            // send response
+            $data_invoice_update['invoice'] = $invoice ;
+            $data_invoice_update['invoice']['items'] = $invoice_items_updated ;
+            return response()->apiSuccess($data_invoice_update , "success");
         }
-        // dd($invoice_items);
-        
-
-        dd($invoice_items);
-        
-        // $invoice_id = InvoiceModel::latest()->first();
-        // dd($invoice_id);
-        if (!empty($items)) {
-            for($i=0 ; $i < count($items) ; $i++){
-                $product[] = ProductsModel::where('id' , $items[$i]['id'])->first(); 
-            }
-            $item_data = [];
-            for ($i = 0; $i < count($items); $i++) {
-                if(empty($items[$i])){
-                    continue;
-                }else{
-                    // $item_data[$i] = array(
-                    //     'invoice_id' => $invoice_id,
-                    //     'item' => $invoice_items[$i]->id,
-                    //     'price' => $items[$i]['price'] ?? $invoice_items[$i]->price,
-                    //     'qty' =>$items[$i]['qty'] ?? 1 ,
-                    //     'discount' => $items[$i]['discount'] ?? $invoice_items[$i]->discount_item ?? null,
-                    //     'total' => $invoice_items[$i]->total_price ?? 0
-                    // );
-                    // DB::table('invoice_items')->where('invoice_id' ,$invoice_id)->update($item_data);
-                    
-                }
-        }}
-
+        return response()->apiSuccess("invoice not found");
     }
     public function destroy($id)
     {
@@ -229,7 +185,10 @@ class InvoiceApiController extends Controller
     }
     public function archive(){
         $invoices = InvoiceModel::onlyTrashed()->get();
-        return $invoices ;
+        if($invoices->count() != 0){
+            return response()->apiSuccess( $invoices);
+        }
+        return response()->apiFail('there is no invoice in archive' , 404);
     }
     public function restore_invoice($id){
         $invoice = InvoiceModel::withTrashed()->where('id' , $id)->get();
