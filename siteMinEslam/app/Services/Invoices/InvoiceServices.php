@@ -16,7 +16,7 @@ class InvoiceServices extends AbstractService
         parent::__construct($repo);
         $this->repo = $repo;
     }
-    public function getAllwithparameter($business_id , $status){
+    public function get_all_with_parameter($business_id , $status){
         return $this->repo->getAll()->where('business_id' , $business_id)->where('status' , $status);
     }
 
@@ -24,7 +24,6 @@ class InvoiceServices extends AbstractService
         if (!$request_items == null) {
             for($i=0 ; $i < count($request_items) ; $i++){
                 if($request_items[$i]['id'] == $invoice_items[$i]->id){
-                    // dd($request_items[$i]['id']);
                     $item_data[$i] = array(
                     'item' =>     $request_items[$i]['id'],
                     'price' =>    $request_items[$i]['price'] ?? $invoice_items[$i]->price ,
@@ -43,17 +42,6 @@ class InvoiceServices extends AbstractService
             //     // return response()->apiSuccess($data_updated);
             // }
     }
-    // public function get_invoices($business_id = 24305 , $status){
-    //     $data = array();
-    //     if($status != null){
-
-    //         $data = InvoiceModel::where('business_id', $business_id)->where('status' , $status)->get();
-    //     }else{
-    //         $data = InvoiceModel::where('business_id', $business_id)->get();
-
-    //     }
-    //     return $data ;
-    // }
 
 }
 

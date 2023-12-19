@@ -6,14 +6,9 @@ use App\Models\InvoiceModel;
 use Illuminate\Http\Request;
 use App\Models\ProductsModel;
 use Illuminate\Support\Facades\DB;
-use App\Exports\InvoiceModelExport;
-use App\Models\Invoice_Items_Taxes;
 use App\Http\Controllers\Controller;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Validator;
 use App\Services\Invoices\InvoiceServices;
-use Predis\Command\Traits\BloomFilters\Items;
-use App\Http\Controllers\Api\Base\BaseController;
+use App\Models\BusinessModel;
 
 class InvoiceApiController extends Controller
 {
@@ -26,7 +21,9 @@ class InvoiceApiController extends Controller
     }
     public function index(Request $request)
     {
-        return response()->apiSuccess($this->invoice_service->getAllwithparameter($request->business_id ?? 24305 , $request->status));
+        $user =  auth('sanctum')->user()->id  ;
+        $business = BusinessModel::where('user_id' , $user)->first();
+        return response()->apiSuccess($this->invoice_service->get_all_with_parameter($request->business_id ?? $business , $request->status));
     }
 
     public function show($id){
@@ -34,73 +31,133 @@ class InvoiceApiController extends Controller
     }
     public function store(Request $request){
         $user =  auth('sanctum')->user()->id  ;
-        $items = $request->input('items');
-
-        $data['invoices'] = $request->only([
-            'user_id' => $user,
-            'business_id' => $request->business_id,
-            'title' => $request->title,
-            'type' => $request->type,
-            'recurring' => $request->recurring,
-            'summary' => $request->summary,
-            'number' => $request->number,
-            'poso_number' => $request->poso_number,
-            'customer' => $request->customer,
-            'date' => $request->date,
-            'discount' => $request->discount,
-            'payment_due' => $request->payment_due,
-            'footer_note' => $request->footer_note,
-            'sub_total' => $request->sub_total,
-            'grand_total' => $request->grand_total,
-            'convert_total' => $request->convert_total,
-            'status' => $request->status,
-            'reject_reason' => '',
-            'client_action_date' => '',
-            'parent_id' => '',
-            'expire_on' => '',
-            'due_limit' => '',
-            'is_sent' => '',
-            'is_completed' => '',
-            'sent_date' => '',
-            'recurring_start' => '',
-            'recurring_end' => '',
-            'frequency' => '',
-            'next_payment' => '',
-            'frequency_count' => '',
-            'auto_send' => '',
-            'send_myself' => '',
-            'created_at' => date('Y-m-d-h-m-s'),
-        ]);
-        $this->invoice_service->store($data['invoices']);
-        $invoice_id = InvoiceModel::latest()->first()->id;
-        if (!empty($items)) {
-            for($i=0 ; $i < count($items) ; $i++){
-                $product[] = ProductsModel::where('id' , $items[$i]['id'])->first(); 
-            }
-            $item_data = [];
-            for ($i = 0; $i < count($product); $i++) {
-                if(empty($product[$i]->id)){
-                    continue;
-                }else{
-                    $item_data[$i] = array(
-                        'invoice_id' => $invoice_id,
-                        'item' => $product[$i]->id,
-                        'price' => $items[$i]['price'] ?? $product[$i]->price,
-                        'qty' =>$items[$i]['qty'] ?? 1 ,
-                        'discount' => $items[$i]['discount'] ?? $product[$i]->discount_item ?? null,
-                        'total' => $product[$i]->total_price
-                    );
-                    helper_insert($item_data[$i], 'invoice_items');
+        foreach($request->invoice as $invoice){
+            // dd($invoice['business_id']);
+            $data['invoices'] = [
+                'user_id' => $user,
+                'business_id' => $invoice['business_id'],
+                'title' => $invoice['title'],
+                'type' => $invoice['type'],
+                'recurring' => $invoice['recurring'],
+                'summary' => $invoice['summary'],
+                'number' => $invoice['number'],
+                'poso_number' => $invoice['poso_number'],
+                'customer' => $invoice['customer'],
+                'date' => $invoice['date'],
+                'discount' => $invoice['discount'],
+                'payment_due' => $invoice['payment_due'],
+                // 'footer_note' => $invoice['footer_note'],
+                // 'sub_total' => $invoice['sub_total'],
+                // 'grand_total' => $invoice['grand_total'],
+                // 'convert_total' => $invoice['convert_total'],
+                // 'status' => $invoice['status'],
+                'reject_reason' => '',
+                'client_action_date' => '',
+                'parent_id' => '',
+                'expire_on' => '',
+                'due_limit' => '',
+                'is_sent' => '',
+                'is_completed' => '',
+                'sent_date' => '',
+                'recurring_start' => '',
+                'recurring_end' => '',
+                'frequency' => '',
+                'next_payment' => '',
+                'frequency_count' => '',
+                'auto_send' => '',
+                'send_myself' => '',
+                'created_at' => date('Y-m-d-h-m-s'),
+            ];
+            $this->invoice_service->store($data['invoices']);
+            $invoice_id = InvoiceModel::latest()->first()->id;
+            if (!empty($invoice['items'])) {
+                for($i=0 ; $i < count($invoice['items']) ; $i++){
+                    $product[] = ProductsModel::where('id' , $invoice['items'][$i]['id'])->first(); 
                 }
-        }}
+                $item_data = [];
+                for ($i = 0; $i < count($product); $i++) {
+                    if(empty($product[$i]->id)){
+                        continue;
+                    }else{
+                        $item_data[$i] = array(
+                            'invoice_id' => $invoice_id,
+                            'item' => $product[$i]->id,
+                            'price' => $items[$i]['price'] ?? $product[$i]->price,
+                            'qty' =>$items[$i]['qty'] ?? 1 ,
+                            'discount' => $items[$i]['discount'] ?? $product[$i]->discount_item ?? null,
+                            'total' => $product[$i]->total_price
+                        );
+                        helper_insert($item_data[$i], 'invoice_items');
+                    }
+            }}
+        }
+        // $items = $request->input('items');
 
-        $data['items'] = $item_data;
-        if(empty($data['invoices'])){
-            return response()->apiFail();
-        }
-        elseif($data['invoices']){
-            return response()->apiSuccess($data);
-        }
+        // $data['invoices'] = $request->only([
+        //     'user_id' => $user,
+        //     'business_id' => $request->business_id,
+        //     'title' => $request->title,
+        //     'type' => $request->type,
+        //     'recurring' => $request->recurring,
+        //     'summary' => $request->summary,
+        //     'number' => $request->number,
+        //     'poso_number' => $request->poso_number,
+        //     'customer' => $request->customer,
+        //     'date' => $request->date,
+        //     'discount' => $request->discount,
+        //     'payment_due' => $request->payment_due,
+        //     'footer_note' => $request->footer_note,
+        //     'sub_total' => $request->sub_total,
+        //     'grand_total' => $request->grand_total,
+        //     'convert_total' => $request->convert_total,
+        //     'status' => $request->status,
+        //     'reject_reason' => '',
+        //     'client_action_date' => '',
+        //     'parent_id' => '',
+        //     'expire_on' => '',
+        //     'due_limit' => '',
+        //     'is_sent' => '',
+        //     'is_completed' => '',
+        //     'sent_date' => '',
+        //     'recurring_start' => '',
+        //     'recurring_end' => '',
+        //     'frequency' => '',
+        //     'next_payment' => '',
+        //     'frequency_count' => '',
+        //     'auto_send' => '',
+        //     'send_myself' => '',
+        //     'created_at' => date('Y-m-d-h-m-s'),
+        // ]);
+        // $this->invoice_service->store($data['invoices']);
+        // $invoice_id = InvoiceModel::latest()->first()->id;
+        // if (!empty($items)) {
+        //     for($i=0 ; $i < count($items) ; $i++){
+        //         $product[] = ProductsModel::where('id' , $items[$i]['id'])->first(); 
+        //     }
+        //     $item_data = [];
+        //     for ($i = 0; $i < count($product); $i++) {
+        //         if(empty($product[$i]->id)){
+        //             continue;
+        //         }else{
+        //             $item_data[$i] = array(
+        //                 'invoice_id' => $invoice_id,
+        //                 'item' => $product[$i]->id,
+        //                 'price' => $items[$i]['price'] ?? $product[$i]->price,
+        //                 'qty' =>$items[$i]['qty'] ?? 1 ,
+        //                 'discount' => $items[$i]['discount'] ?? $product[$i]->discount_item ?? null,
+        //                 'total' => $product[$i]->total_price
+        //             );
+        //             helper_insert($item_data[$i], 'invoice_items');
+        //         }
+        // }}
+
+        // $data['items'] = $item_data;
+        // if(empty($data['invoices'])){
+        //     return response()->apiFail();
+        // }
+        // elseif($data['invoices']){
+        //     return response()->apiSuccess($data);
+        // }
         
     }
     public function store_invoice_items(Request $request){
@@ -192,11 +249,11 @@ class InvoiceApiController extends Controller
     }
     public function restore_invoice($id){
         $invoice = InvoiceModel::withTrashed()->where('id' , $id)->get();
-        // dd($invoice->count());
         if($invoice->count() == 0){
             return response()->apiFail('the invoice is not exists' , 404);
         }
-        else{
+        else
+        {
             $invoice = InvoiceModel::withTrashed()->where('id' , $id)->restore();
             return response()->apiSuccess( null , 'the invoice restore' , 200);
         }
