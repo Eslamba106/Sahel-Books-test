@@ -41,6 +41,8 @@ Route::controller(InvoiceApiController::class)->group(function(){
     Route::post('/admin/invoice/delete/{id}', 'destroy')->middleware('auth:sanctum');
     Route::get('archive', 'archive')->middleware('auth:sanctum');
     Route::post('invoice/restore/{id}', 'restore_invoice')->middleware('auth:sanctum');
+    Route::post('invoice/import', 'import')->middleware('auth:sanctum');
+    Route::get('invoice/export', 'export')->middleware('auth:sanctum');
 
 });
 
