@@ -6,12 +6,17 @@ use App\Models\InvoiceModel;
 use Illuminate\Http\Request;
 use App\Models\BusinessModel;
 use App\Models\ProductsModel;
+use App\Jobs\ImportExcelInvoices;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Bus;
 use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\InvoiceModelImportApi;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use App\Services\Invoices\InvoiceServices;
 use App\Requests\Invoice\ImportInvoiceValidator;
+// use Illuminate\Bus\Batchable;
+
 
 class InvoiceApiController extends Controller
 {
@@ -187,14 +192,63 @@ class InvoiceApiController extends Controller
             return response()->apiSuccess( null , 'the invoice restore' , 200);
         }
     }
-    public function import(ImportInvoiceValidator $importInvoiceValidator){
-        if(!empty($importInvoiceValidator->getErrors())){
-            return response()->json($importInvoiceValidator->getErrors() , 406);
-        }
-        // dd($importInvoiceValidator->request()->file('file'));
-        Excel::import(new InvoiceModelImportApi() , $importInvoiceValidator->request()->file('file')->store('files'));
-        return response()->apiSuccess(null , "invoices saved");
+    public function import(Request $request){
+        // if(!empty($importInvoiceValidator->getErrors())){
+        //     return response()->json($importInvoiceValidator->getErrors() , 406);
+        // }
+        // return auth('sanctum')->user()->id;
+        $filename = $request->file('file');
+        // dd($filename);
+        Excel::queueImport(new InvoiceModelImportApi(), $filename);
+        // Excel::import(new InvoiceModelImportApi(), $filename);
+        // (new InvoiceModelImportApi())->queue($filename);
+        // Excel::import(new InvoiceModelImportApi() , $importInvoiceValidator->request()->file('file')->store('files'));
+        return response()->apiSuccess(null , "Invoices Saved");
     }
+    // public function import(ImportInvoiceValidator $importInvoiceValidator){
+    //     if(!empty($importInvoiceValidator->getErrors())){
+    //         return response()->json($importInvoiceValidator->getErrors() , 406);
+    //     }
+    //     $filename = $importInvoiceValidator->request()->file('file');
+    //     Excel::queueImport(new InvoiceModelImportApi(), $filename);
+
+    //     // Excel::import(new InvoiceModelImportApi() , $importInvoiceValidator->request()->file('file')->store('files'));
+    //     return response()->apiSuccess(null , "Invoices Saved");
+    // }
+    // public function import(Request $request){
+    //     // if(!empty($importInvoiceValidator->getErrors())){
+    //     //     return response()->json($importInvoiceValidator->getErrors() , 406);
+    //     // }
+    //     // dd($request->file) ;
+    //     if($request->has('file')){
+    //         $xlsx = $request->file('file');
+    //         // dd(gettype($xlsx));
+    //     // $chunks = array_chunk((array)$xlsx , 500);
+    //     // dd($chunks);        }
+    //     // return "error";
+    //     $header = [];
+    //     $xlsx = file($request->xlsx);
+    //     Excel::queueImport(new ImportExcelInvoices($xlsx , $header), $xlsx);
+    //     }
+    //     // $filename = $xlsx->getClientOriginalName();
+    //     // $chunks = array_chunk($xlsx , 500);
+    //     // dd($chunks);
+    //     // $header = [];
+    //     // $batch = Bus::batch([])->dispatch();
+    //     // foreach($chunks as $chunk){
+    //     //     $data = array_map('str_getcsv' , $chunk);
+    //     //     $batch->add(new ImportExcelInvoices($data ,$header));
+    //     // }
+    //     // return "finish";
+    //     // if($request->has('xlsx')){
+    //     //     $xlsx = file($request->xlsx);
+    //     //     return $xlsx ;
+    //     // }
+    //     // $data_imported = $importInvoiceValidator->request()->file('file');
+    //     // ImportExcelInvoices::dispatch($data_imported);
+    //     // Excel::import(new InvoiceModelImportApi() , $importInvoiceValidator->request()->file('file')->store('files'));
+    //     // return response()->apiSuccess(null , "Invoices Saved");
+    // }
     public function export(){}
 
 }
