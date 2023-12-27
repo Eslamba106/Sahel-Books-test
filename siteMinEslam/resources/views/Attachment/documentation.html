@@ -7,16 +7,89 @@
 </head>
 <body>
     <div>
-        <h1>Login</h1>
-        <a>http://localhost/project/siteMinEslam/api/login</a>
-        <p>
-            you must write your email and your password and you should be register
-for example
-email : user@user.com
-
-
-
-        </p>
+        <h1>AUTH ROUTES : </h1>
+        <div style="text-align: center;">
+            <h1 style="color: red;">Register</h1>
+            <span style="font-size: larger;">Route Link : </span><a style="font-size: larger;" href="http://localhost/project/siteMinEslam/api/register">Register</a>
+            <p style="font-size: larger;">
+                you must write your email and your password and confirm your password then enter your name<br>
+                for example <br>
+                email : user@user.com <br>
+                password : e0g4yjh566 <br>
+                password_confirmation : e0g4yjh566 <br>
+                name: user <br>
+                username: useruser <br>
+            </p>
+        </div>
+        <div style="text-align: center;">
+            <h1 style="color: red;">Login</h1>
+            <span style="font-size: larger;">Route Link : </span><a style="font-size: larger;" href="http://localhost/project/siteMinEslam/api/login">Login</a>
+            <p style="font-size: larger;">
+                you must write your email and your password and you should be register <br>
+                for example <br>
+                email : user@user.com <br>
+                password : e0g4yjh566 <br>
+            </p>
+        </div>
+        <div style="text-align: center;">
+            <h1 style="color: red;">Logout</h1>
+            <span style="font-size: larger;">Route Link : </span><a style="font-size: larger;" href="http://localhost/project/siteMinEslam/api/logout">Logout</a>
+            <p style="font-size: larger;">
+                you should be login to logout<br>
+            </p>
+        </div>
+    </div>
+    <hr>
+    <div>
+        <h1>INVOICES ROUTES : </h1>
+        <div style="text-align: center;">
+            <h1 style="color: red;">All Invoices</h1>
+            <span style="font-size: larger;">Route Link : </span><a style="font-size: larger;" href="http://localhost/project/siteMinEslam/api/admin/invoice">Show All Invoices</a>
+            <p style="font-size: larger;">
+                To show your invoices you must be login <br>
+                and enter your business_id and invoice status <br>
+                for example : <br>
+                business_id : 25245 <br>
+                invoice status : 1 <br>
+                if you not entered the two parameters we take the default <br>
+                default business_id <br>
+                default invoice status <br>
+            </p>
+        </div>
+        <div style="text-align: center;">
+            <h1 style="color: red;">Show Invoice Specific</h1>
+            <span style="font-size: larger;">Route Link : </span><a style="font-size: larger;" href="http://localhost/project/siteMinEslam/api/admin/invoice/invoice_id">Show Invoice Specific</a>
+            <p style="font-size: larger;">
+                To show your invoice you must be login <br>
+                and enter your invoice_id<br>
+                for example : <br>
+                invoice_id : 5 <br>
+            </p>
+        </div>
+        <div style="text-align: center;">
+            <h1 style="color: red;">Create Invoice</h1>
+            <span style="font-size: larger;">Route Link : </span><a style="font-size: larger;" href="http://localhost/project/siteMinEslam/api/admin/invoice">Create Invoice</a>
+            <p style="font-size: larger;">
+                To show your invoice you must be login <br>
+                and enter your invoice data<br>
+                for example : <br>
+                business_id , if you not entered it we take default <br>
+                title  <br>
+                type  <br>
+                number  <br>
+                discount  <br>
+                sub_total  <br>
+                grand_total  <br>
+                convert_total  <br>
+                invoice items :  <br>
+                you enter array of objects which inside it this data :  <br>
+                id <br>
+                price <br>
+                qty that mean quantity and default 1<br>
+                discount and default 0<br>
+                tax and default 0<br>
+            </p>
+        </div>
     </div>
 </body>
 </html>

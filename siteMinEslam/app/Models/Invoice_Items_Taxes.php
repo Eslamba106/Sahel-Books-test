@@ -9,5 +9,7 @@ class Invoice_Items_Taxes extends Model
 {
     use HasFactory;
     protected $table = 'invoice_items_taxes';
-    protected $fillabel = ['id', 'invoice_id', 'invoice_item_id', 'tax_id', 'tax_type', 'tax_rate', 'tax_value'];
+    protected $fillable = ['id', 'invoice_id', 'invoice_item_id', 'tax_id', 'tax_type', 'tax_rate', 'tax_value'];
+    public $timestamps = false;
+
 }

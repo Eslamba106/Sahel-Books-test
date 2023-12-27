@@ -4,9 +4,13 @@ namespace App\Services\Invoices;
 
 use Stripe\Invoice;
 use App\Models\InvoiceModel;
-use Illuminate\Support\Facades\DB;
-use App\Repositories\Invoices\InvoicesRepository;
 use App\Services\AbstractService;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\InvoiceItemsImportApi;
+use App\Imports\InvoiceModelImportApi;
+use App\Imports\InvoiceItemsTaxesImportApi;
+use App\Repositories\Invoices\InvoicesRepository;
 
 class InvoiceServices extends AbstractService
 {
@@ -41,6 +45,16 @@ class InvoiceServices extends AbstractService
             //     return "eslam";
             //     // return response()->apiSuccess($data_updated);
             // }
+    }
+    public function import_invoice($filename , $user_auth){
+        Excel::queueImport(new InvoiceModelImportApi($user_auth->id), $filename);
+
+    }
+    public function import_invoice_items($filename){
+        Excel::queueImport(new InvoiceItemsImportApi(), $filename);
+    }
+    public function import_invoice_item_taxes($filename){
+        Excel::queueImport(new InvoiceItemsTaxesImportApi(), $filename);
     }
 
 }
