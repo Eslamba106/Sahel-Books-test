@@ -31,9 +31,11 @@ class InvoiceApiController extends Controller
     }
     public function index(Request $request)
     {
-        $user =  auth('sanctum')->user()->id  ;
-        $business = BusinessModel::where('user_id' , $user)->first();
-        return response()->apiSuccess($this->invoice_service->get_all_with_parameter($request->business_id ?? $business->uid , $request->status));
+        // $user =  auth('sanctum')->user()->id  ;
+        // // dd($user);
+        // // $business = BusinessModel::where('user_id' , $user)->first();
+        $business = BusinessModel::where('is_primary' , 1)->first();
+        return response()->apiSuccess($this->invoice_service->get_all_with_parameter($request->business_id ?? $business->uid , $request->status ?? 1));
     }
 
     public function show($id){
@@ -195,23 +197,15 @@ class InvoiceApiController extends Controller
         }
     }
     public function import(Request $request){
-        // if(!empty($importInvoiceValidator->getErrors())){
-        //     return response()->json($importInvoiceValidator->getErrors() , 406);
-        // }
-        // return auth('sanctum')->user()->id;
         $filename = $request->file('file');
         $user_auth =  auth('sanctum')->user();
-// dd($user_auth);
-// (new InvoiceModelImportApi())->queue($filename)->chain([
-//     new NotifyUserOfCompletedImport($user_auth),
-// ]);
         $this->invoice_service->import_invoice($filename , $user_auth);
+        // $customer = DB::table('customers')->where('name' , 'محمد')->first();
+        // dd($customer->id);
+        // return ($invoice);
         $this->invoice_service->import_invoice_items($filename);
         $this->invoice_service->import_invoice_item_taxes($filename);
-        // Excel::queueImport(new InvoiceModelImportApi($user_auth->id), $filename);
-        // Excel::queueImport(new InvoiceItemsImportApi(), $filename);
-        // Excel::queueImport(new InvoiceItemsTaxesImportApi(), $filename);
-        return response()->apiSuccess(null , "Invoices Saved");
+        return response()->apiSuccess(null,"invoices saved");
     }
 
     public function export(){}

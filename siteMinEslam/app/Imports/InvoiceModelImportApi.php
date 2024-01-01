@@ -4,9 +4,10 @@ namespace App\Imports;
 
 use App\Models\UsersModel;
 use App\Models\InvoiceModel;
-use App\Models\Invoice_Items;
 use App\Models\BusinessModel;
+use App\Models\Invoice_Items;
 use App\Models\ProductsModel;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\Importable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -35,24 +36,7 @@ class InvoiceModelImportApi implements ToModel, WithChunkReading, ShouldQueue,Wi
         $user = UsersModel::where('user_name' , $row['username'])->first();
         $business = BusinessModel::where('name' , $row['business'])->first();
         $invoice = InvoiceModel::where('model_number' , $row['model_number'])->first();
-        // if($invoice){
-        //     $item = ProductsModel::where('name' , $row['item_name'])->first();
-        //     if($item){
-        //         return new Invoice_Items([
-        //             'invoice_id' => $invoice->id,
-        //             'item' => $item->id,
-        //             'qty' => $row['quantity'],
-        //             'price' => ($item->price), 
-        //             'discount' => $row['item_discount'] ?? 0, 
-        //             'total' => ($item->price * $row['quantity']) - $row['item_discount'], 
-        //             'type' => $row['type']
-        //         ]);
-        // }
-        // }else{
-        //     $item = ProductsModel::where('name' , $row['item_name'])->first();
-            // if($invoice){
-            //     return 1;
-            // }else{
+        $customer = DB::table('customers')->where('name' , $row['customer'])->first();
         if(empty($invoice))
         {    
         return new InvoiceModel([
@@ -61,14 +45,15 @@ class InvoiceModelImportApi implements ToModel, WithChunkReading, ShouldQueue,Wi
                 'user_id' => $user->id ?? $this->user_auth,
                 'business_id' => $business->uid ?? $business_default->uid,
                 'type' => $row['type'],
-                'number' =>  $row['number'] ,
+                'number' =>  $row['number'] ?? date('Y'). str_pad(get_invoice_number(1), 2, '0', STR_PAD_LEFT),
                 'date' => $row['date'] ?? date('Y-m-d-h-m-s'),
                 'discount' => $row['discount'] ?? 0,
                 'payment_due' => $row['payment_deu'] ?? "",
                 'sub_total' => $row['sub_total'] ?? "",
+                'customer' => $customer->id,
                 'grand_total' => $row['grand_total'] ?? "",
                 'convert_total' => $row['convert_total'] ?? "",
-                'status' => $row['status'] ?? "0",
+                'status' => $row['status'] ?? "1",
                 'footer_note' => $row['footer_note'] ?? "",
                 'reject_reason' => '',
                 'client_action_date' => '',
@@ -88,7 +73,6 @@ class InvoiceModelImportApi implements ToModel, WithChunkReading, ShouldQueue,Wi
                 'recurring' => "",
                 'summary' =>"",
                 'poso_number' => "",
-                'customer' => "",
                 'created_at' => date('Y-m-d-h-m-s'),
             ]);
         }

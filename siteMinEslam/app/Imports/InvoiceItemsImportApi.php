@@ -24,7 +24,7 @@ class InvoiceItemsImportApi implements ToModel,WithChunkReading, ShouldQueue ,Wi
         $item = ProductsModel::where('name' , $row['item_name'])->first();
         $tax = TaxModel::where('name' , $row['tax_name'])->first();
         $tax_value = 0 ;
-
+        // dd($invoice);
         if($tax){
             $tax_value = (($item->price * $row['quantity']) * $tax->rate);
         }
